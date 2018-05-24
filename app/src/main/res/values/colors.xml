@@ -7,4 +7,7 @@
     <color name="colorTech">#b84dff</color>
     <color name="colorWorldnews">#ff8c1a</color>
     <color name="colorBusiness">#7575a3</color>
+    <color name="colorPolitics">#ff99ff</color>
+    <color name="colorUK">#ff471a</color>
+    <color name="colorLife">#77b300</color>
 </resources>

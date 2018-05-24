@@ -1,6 +1,9 @@
 package com.example.csaba.newsappstage1v3;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +13,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -27,9 +32,10 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
+
 public class MainActivity extends AppCompatActivity {
 
-    private static final String requestUrl = "https://content.guardianapis.com/search?q=bitcoin&from-date=2014-01-01&api-key=1da394a8-c369-4807-bc2a-a49b797f8e62";
+    private static final String requestUrl = "https://content.guardianapis.com/search?q=bitcoin&from-date=2014-01-01&show-tags=contributor&order-by=newest&api-key=1da394a8-c369-4807-bc2a-a49b797f8e62";
 
 
     @Override
@@ -110,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
                 inputStream = urlConnection.getInputStream();
                 jsonResponse = readFromStream(inputStream);
             } else {
+                //Log.e(LOG_TAG, "Error response code: " + urlConnection.getResponseCode());
             }
         } catch (IOException e) {
         } finally {
@@ -170,11 +177,12 @@ public class MainActivity extends AppCompatActivity {
 
                     String category = "";
                     String urlJsonLink = "";
+                    String author = "";
 
                     // Get a single article at position i within the list of articles
                     JSONObject currentArticle = resultsArray.getJSONObject(i);
 
-                    // Extract out the title, time, and tsunami values
+                    // Extract out the title, time, and values
                     String webTitle = currentArticle.getString("webTitle");
                     String webUrl = currentArticle.getString("webUrl");
                     String sectionName = currentArticle.getString("sectionName");
@@ -184,8 +192,18 @@ public class MainActivity extends AppCompatActivity {
                     /**new date is the part before the "T" */
                     date = parts[0];
 
+                    /**get tags array and author object*/
+                    if (currentArticle.has("tags")) {
+                        JSONArray tagsArray = currentArticle.getJSONArray("tags");
+                        if (tagsArray.length() > 0) {
+                            JSONObject newsTag = tagsArray.getJSONObject(0);
+                            if (newsTag.has("webTitle")) {
+                                author = newsTag.getString("webTitle");
+                            }
+                        }
+                    }
 
-                    news.add(new Event(webTitle, webUrl, sectionName, date));
+                    news.add(new Event(webTitle, webUrl, sectionName, date, author));
 
                 }
             }
@@ -206,12 +224,30 @@ public class MainActivity extends AppCompatActivity {
         ListView newsListView = (ListView) findViewById(R.id.list);
         final EventAdapter adapter = new EventAdapter(this, news);
 
-        /** If there is no result, send a message */
-        if (news.isEmpty()) {
-            Toast.makeText(this, "no result, Try it again", Toast.LENGTH_LONG).show();
-            //emptyTextView.setText("No result found!");
+        /**check connectivity*/
+        // Get a reference to the ConnectivityManager to check state of network connectivity
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        // Get details on the currently active default data network
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        /** If there is no result, send a message*/
+        if (news.isEmpty() || networkInfo == null) {
+
+            // First, hide loading indicator so error message will be visible
+            View loadingIndicator = findViewById(R.id.loading_indicator);
+            loadingIndicator.setVisibility(View.GONE);
+            TextView mEmptyStateTextView = (TextView) findViewById(R.id.empty_view);
+            mEmptyStateTextView.setVisibility(View.VISIBLE);
+            mEmptyStateTextView.setText(getString(R.string.no_internet_connection));
+
+        } else {
+            // First, hide loading indicator
+            View loadingIndicator = findViewById(R.id.loading_indicator);
+            loadingIndicator.setVisibility(View.GONE);
+
+            newsListView.setAdapter(adapter);
         }
-        newsListView.setAdapter(adapter);
 
 
         /**make list item clickable*/
@@ -231,6 +267,18 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(websiteIntent);
             }
         });
+    }
+
+    /**
+     * hide loading indicator show empty textview
+     */
+    private void NoConnection() {
+        // First, hide loading indicator so error message will be visible
+        View loadingIndicator = findViewById(R.id.loading_indicator);
+        loadingIndicator.setVisibility(View.GONE);
+
+        TextView mEmptyStateTextView = (TextView) findViewById(R.id.empty_view);
+        mEmptyStateTextView.setText(R.string.no_internet_connection);
     }
 }
 

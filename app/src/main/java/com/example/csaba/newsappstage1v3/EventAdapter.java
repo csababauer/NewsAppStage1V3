@@ -41,6 +41,10 @@ public class EventAdapter extends ArrayAdapter<Event> {
         TextView webSection = (TextView) listViewItem.findViewById(R.id.section);
         webSection.setText(currentEvent.getSection());
 
+        /**set author*/
+        TextView author = (TextView) listViewItem.findViewById(R.id.author);
+        author.setText(currentEvent.getAuthor());
+
         /**set section background color*/
         GradientDrawable sectionCircle = (GradientDrawable) webSection.getBackground();
         /**use a helper method to set color*/
@@ -65,6 +69,15 @@ public class EventAdapter extends ArrayAdapter<Event> {
                 break;
             case "Business":
                 colorResourceId = R.color.colorBusiness;
+                break;
+            case "Politics":
+                colorResourceId = R.color.colorPolitics;
+                break;
+            case "UK news":
+                colorResourceId = R.color.colorUK;
+                break;
+            case "Life and style":
+                colorResourceId = R.color.colorLife;
                 break;
             default:
                 colorResourceId = R.color.colorAccent;
