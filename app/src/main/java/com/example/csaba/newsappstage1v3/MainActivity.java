@@ -43,9 +43,23 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /** Kick off an  AsyncTask to perform the network request*/
+        /** Kick off an  AsyncTask to perform the network request if there is network connection*/
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        boolean isConnected = (networkInfo != null && networkInfo.isConnectedOrConnecting());
+        if (isConnected) {
+            /**kick off AsyncTask*/
         GuardianAsyncTask task = new GuardianAsyncTask();
-        task.execute();
+        task.execute();}
+        else {
+            //hide loading indicator
+            View loadingIndicator = findViewById(R.id.loading_indicator);
+            loadingIndicator.setVisibility(View.GONE);
+            //no network message
+            TextView mEmptyStateTextView = (TextView) findViewById(R.id.empty_view);
+            mEmptyStateTextView.setVisibility(View.VISIBLE);
+            mEmptyStateTextView.setText(getString(R.string.no_internet_connection));
+        }
     }
 
     private class GuardianAsyncTask extends AsyncTask<URL, Void, ArrayList<Event>> {
